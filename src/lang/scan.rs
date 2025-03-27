@@ -250,4 +250,21 @@ mod tests {
 			};
 			assert_eq!(file_toks, correct_toks)
 		}
+
+		#[test]
+		fn test_minus() {
+			let correct_toks = vec![
+				Token::Number(TokenStr::from("24")),
+				Token::Minus,
+				Token::Number(TokenStr::from("12")),
+				Token::Semicolon,
+				Token::End,
+			];
+
+			let file_toks = match do_file("minus") {
+				Ok(ts) => ts,
+				Err(e) => return assert_eq!(true, false),
+			};
+			assert_eq!(file_toks, correct_toks)
+		}
 }
