@@ -59,7 +59,6 @@ fn is_number(terminal: &char) -> bool {
 
 struct Scanner<'src> {
 	source: Enumerate<Chars<'src>>,
-	tokens: Vec<Token>,
 }
 
 impl<'src> Scanner<'src> {
@@ -93,19 +92,28 @@ pub fn file(path: &String) -> Result<Vec<Token>, Error> {
 }
 
 pub fn source(input: String) -> Result<Vec<Token>, Error> {
-	let mut scanner = Scanner { source: input.chars().enumerate(), tokens: Vec::new() };
+	let mut tokens = Vec::new();
+	let mut scanner = Scanner { source: input.chars().enumerate() };
 
 	loop {
 		let Some((i, terminal)) = scanner.source.next() else {
-			scanner.tokens.push(Token::End);
+			tokens.push(Token::End);
 			break;
 		};
 
 		if is_number(&terminal) {
+			tokens.push(scanner.number(terminal));
+			continue;
 		}
 		match terminal  {
-			'*' => scanner.tokens.push(Token::Star),
-			'+' => (),
+			'*' => tokens.push(Token::Star),
+			'+' => {
+				if scanner.peek('+') {
+					tokens.push(Token::PlusPlus);
+				} else {
+					tokens.push(Token::Plus);
+				}
+			},
 
 			' ' | '\n' => (),
 
@@ -113,9 +121,7 @@ pub fn source(input: String) -> Result<Vec<Token>, Error> {
 		}
 	}
 
-	println!("{:?}", scanner.tokens);
-
-	Ok(scanner.tokens)
+	Ok(tokens)
 }
 
 #[cfg(test)]
