@@ -25,6 +25,7 @@ pub enum Token {
 	RightBracket,
 	Comma,
 	Dot,
+	Colon,
 	Semicolon,
 	Slash,
 	Star,
