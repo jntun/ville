@@ -4,6 +4,7 @@
 
 use std::iter::Enumerate;
 use std::str::Chars;
+use byteyarn::{Yarn};
 use crate::lang;
 
 #[derive(Debug)]
@@ -13,7 +14,8 @@ pub enum Error {
 	EndOfFile,
 }
 
-pub type TokenStr = String;
+/* Optimized unicode byte string */
+pub type TokenStr = Yarn;
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
@@ -87,25 +89,25 @@ impl<'src> Scanner<'src> {
 	}
 
 	fn number(&mut self, init: char) -> Token {
-		let mut tok_str = TokenStr::from(init);
+		let mut tok_str = String::from(init);
 		while let Some((_, terminal)) = self.source.clone().peekable().peek() {
 			if !terminal.is_digit(10) {
 				break;
 			}
 			tok_str.push(self.source.next().unwrap().1);
 		}
-		Token::Number(tok_str)
+		Token::Number(tok_str.into())
 	}
 
 	fn identifier(&mut self, init: char) -> Token {
-		let mut tok_str = TokenStr::from(init);
+		let mut tok_str = String::from(init);
 		while let Some((_, terminal)) = self.source.clone().peekable().peek() {
 			if !is_identifier(&terminal) {
 				break;
 			}
 			tok_str.push(self.source.next().unwrap().1);
 		}
-		Token::Identifier(tok_str)
+		Token::Identifier(tok_str.into())
 	}
 }
 
@@ -221,9 +223,9 @@ mod tests {
 		#[test]
 		fn test_add() {
 			let correct_toks = vec![
-				Token::Number(String::from("13")),
+				Token::Number(TokenStr::from("13")),
 				Token::Star,
-				Token::Number(String::from("5")),
+				Token::Number(TokenStr::from("5")),
 				Token::Semicolon,
 				Token::End,
 			];
