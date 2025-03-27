@@ -83,11 +83,14 @@ impl<'src> Scanner<'src> {
 
 	fn number(&mut self, init: char) -> Token {
 		let mut tok_str = TokenStr::from(init);
-		while let Some((_, terminal)) = self.source.next() {
+		while let Some((_, terminal)) = self.source.clone().peekable().peek() {
 			if !is_number(&terminal) {
 				break;
 			}
-			tok_str.push(terminal);
+
+	                  /* SAFETY: We peek()d this char already so we 
+	                   *   v     know that there is Some value here */
+			tok_str.push(self.source.next().unwrap().1);
 		}
 		Token::Number(tok_str)
 	}
