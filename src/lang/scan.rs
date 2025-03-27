@@ -70,6 +70,17 @@ impl<'src> Scanner<'src> {
 		};
 		return peek == terminal
 	}
+
+	fn number(&mut self, init: char) -> Token {
+		let mut tok_str = TokenStr::from(init);
+		while let Some((_, terminal)) = self.source.next() {
+			if !is_number(&terminal) {
+				break;
+			}
+			tok_str.push(terminal);
+		}
+		Token::Number(tok_str)
+	}
 }
 
 pub fn file(path: &String) -> Result<Vec<Token>, Error> {
