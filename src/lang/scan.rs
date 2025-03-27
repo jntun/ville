@@ -2,6 +2,8 @@
 // Created by Justin Tunheim on 3/21/25
 //
 
+use std::iter::Enumerate;
+use std::str::Chars;
 use crate::lang;
 
 pub enum Error {
@@ -41,6 +43,8 @@ pub enum Token {
 	Identifier(String),
 	String(String),
 	Number(String),
+
+	End,
 }
 
 fn is_number(terminal: &char) -> bool {
@@ -50,12 +54,19 @@ fn is_number(terminal: &char) -> bool {
 	}
 }
 
-struct Scanner<'src, 'tks> {
-	source: std::str::Chars<'src>,
-	tokens: &'tks mut Vec<Token>,
+struct Scanner<'src> {
+	source: Enumerate<Chars<'src>>,
+	tokens: Vec<Token>,
 }
 
-impl<'src, 'tks> Scanner<'src, 'tks> {
+impl<'src> Scanner<'src> {
+	fn peek(&self, terminal: char) -> bool {
+		let mut copy = self.source.clone();
+		let Some((_, peek)) = copy.next() else {
+			return false;
+		};
+		return peek == terminal
+	}
 }
 
 pub fn file(path: &String) -> Result<Vec<Token>, Error> {
@@ -68,18 +79,18 @@ pub fn file(path: &String) -> Result<Vec<Token>, Error> {
 }
 
 pub fn source(input: String) -> Result<Vec<Token>, Error> {
-	let mut tokens = Vec::new();
-	let mut scanner = Scanner { source: input.chars(), tokens: &mut tokens};
+	let mut scanner = Scanner { source: input.chars().enumerate(), tokens: Vec::new() };
 
 	loop {
-		let Some(terminal) = scanner.source.next() else {
+		let Some((i, terminal)) = scanner.source.next() else {
+			scanner.tokens.push(Token::End);
 			break;
 		};
 
 		if is_number(&terminal) {
 		}
 		match terminal  {
-			'*' => (),
+			'*' => scanner.tokens.push(Token::Star),
 			'+' => (),
 
 			' ' | '\n' => (),
@@ -88,9 +99,9 @@ pub fn source(input: String) -> Result<Vec<Token>, Error> {
 		}
 	}
 
-	println!("{:?}", tokens);
+	println!("{:?}", scanner.tokens);
 
-	Ok(tokens)
+	Ok(scanner.tokens)
 }
 
 #[cfg(test)]
