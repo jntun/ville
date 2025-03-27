@@ -12,6 +12,8 @@ pub enum Error {
 	EndOfFile,
 }
 
+pub type TokenStr = String;
+
 #[derive(Debug, PartialEq)]
 pub enum Token {
 	LeftParen,
@@ -40,9 +42,9 @@ pub enum Token {
 	Less,
 	LessEqual,
 
-	Identifier(String),
-	String(String),
-	Number(String),
+	Identifier(TokenStr),
+	String(TokenStr),
+	Number(TokenStr),
 
 	End,
 }
