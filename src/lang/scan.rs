@@ -102,7 +102,7 @@ pub fn file(path: &String) -> Result<Vec<Token>, Error> {
 }
 
 pub fn source(input: String) -> Result<Vec<Token>, Error> {
-	let mut tokens = Vec::new();
+	let mut tokens  = Vec::new();
 	let mut scanner = Scanner { source: input.chars().enumerate() };
 
 	loop {
@@ -118,11 +118,11 @@ pub fn source(input: String) -> Result<Vec<Token>, Error> {
 		match terminal  {
 			'*' => tokens.push(Token::Star),
 			'+' => {
-				if scanner.peek('+') {
+				if scanner.match_char('+') {
 					tokens.push(Token::PlusPlus);
-				} else {
-					tokens.push(Token::Plus);
+					continue;
 				}
+				tokens.push(Token::Plus);
 			},
 
 			' ' | '\n' => (),
