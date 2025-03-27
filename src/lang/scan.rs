@@ -133,7 +133,7 @@ pub fn source(input: String) -> Result<Vec<Token>, Error> {
 	let mut scanner = Scanner { source: input.chars().enumerate() };
 
 	loop {
-		let Some((i, terminal)) = scanner.source.next() else {
+		let Some((_, terminal)) = scanner.source.next() else {
 			tokens.push(Token::End);
 			break;
 		};
@@ -143,14 +143,26 @@ pub fn source(input: String) -> Result<Vec<Token>, Error> {
 			continue;
 		}
 		match terminal  {
-			'*' => tokens.push(Token::Star),
-			'+' => {
-				if scanner.match_char('+') {
-					tokens.push(Token::PlusPlus);
-					continue;
-				}
-				tokens.push(Token::Plus);
-			},
+			'}' => tokens.push(Token::RightBrace),
+			'{' => tokens.push(Token::LeftBrace),
+			']' => tokens.push(Token::RightBracket),
+			'[' => tokens.push(Token::LeftBracket),
+			')' => tokens.push(Token::RightParen),
+			'(' => tokens.push(Token::LeftParen),
+			'%' => tokens.push(Token::Mod),
+			';' => tokens.push(Token::Semicolon),
+			':' => tokens.push(Token::Colon),
+			'=' => tokens.push(Token::Equal),
+			
+		/* multi-terminal tokens */
+			'=' |  /*  ==     */
+			'!' |  /*  !=     */
+			'*' |  /*  *=     */
+			'-' |  /*  -=, -- */
+			'/' |  /*  /=     */
+			'&' |  /*  &&     */
+			'+'    /*  ++, += */
+			=> tokens.push(multi(&mut scanner, terminal)),
 
 			' ' | '\n' => (),
 
@@ -159,6 +171,55 @@ pub fn source(input: String) -> Result<Vec<Token>, Error> {
 	}
 
 	Ok(tokens)
+}
+
+fn multi(scanner: &mut Scanner, terminal: char) -> Token {
+	match terminal {
+		'=' => {
+			if scanner.match_char('=') {
+				return Token::EqualEqual;
+			}
+			return Token::Equal;
+		},
+		'!' => {
+			if scanner.match_char('=') {
+				return Token::BangEqual;
+			}
+			return Token::Bang;
+		},
+		'*' => {
+			if scanner.match_char('=') {
+				return Token::StarEqual;
+			}
+			return Token::Star;
+		},
+		'-' => {
+			if scanner.match_char('=') {
+				return Token::MinusEqual;
+			}
+			return Token::Minus;
+		},
+		'/' => {
+			if scanner.match_char('=') {
+				return Token::SlashEqual;
+			}
+			return Token::Slash;
+		},
+		'&' => {
+			if scanner.match_char('&') {
+				return Token::And;
+			}
+		},
+		'+' => {
+			if scanner.match_char('=') {
+				return Token::EqualEqual;
+			}
+			return Token::Equal;
+		},
+		_   => (),
+	}
+	
+	return scanner.identifier(terminal);
 }
 
 #[cfg(test)]
