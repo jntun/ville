@@ -56,22 +56,11 @@ pub enum Token {
 	End,
 }
 
-fn is_number(terminal: &char) -> bool {
-	match terminal {
-		'0'..'9' | '.' => return true,
-		_              => return false,
-	}
-}
-
 fn is_identifier(terminal: &char) -> bool {
-	match terminal {
-		'a' .. 'z' |
-		'A' .. 'Z' |
-		'0' .. '9' |
-		'_' => return true,
-		_   => return false,
-		
+	if terminal.is_alphabetic() || terminal.is_numeric() {
+		return true
 	}
+	false
 }
 
 struct Scanner<'src> {
@@ -88,7 +77,7 @@ impl<'src> Scanner<'src> {
 	}
 
 	fn match_char(&mut self, terminal: char) -> bool {
-		let Some((_, peek_term)) = self.source.next() else {
+		let Some((i, peek_term)) = self.source.next() else {
 			return false;
 		};
 		if peek_term != terminal {
@@ -100,7 +89,7 @@ impl<'src> Scanner<'src> {
 	fn number(&mut self, init: char) -> Token {
 		let mut tok_str = TokenStr::from(init);
 		while let Some((_, terminal)) = self.source.clone().peekable().peek() {
-			if !is_number(&terminal) {
+			if !terminal.is_digit(10) {
 				break;
 			}
 			tok_str.push(self.source.next().unwrap().1);
@@ -116,7 +105,7 @@ impl<'src> Scanner<'src> {
 			}
 			tok_str.push(self.source.next().unwrap().1);
 		}
-		Token::String(tok_str)
+		Token::Identifier(tok_str)
 	}
 }
 
@@ -134,12 +123,12 @@ pub fn source(input: String) -> Result<Vec<Token>, Error> {
 	let mut scanner = Scanner { source: input.chars().enumerate() };
 
 	loop {
-		let Some((_, terminal)) = scanner.source.next() else {
+		let Some((i, terminal)) = scanner.source.next() else {
 			tokens.push(Token::End);
 			break;
 		};
 
-		if is_number(&terminal) {
+		if terminal.is_numeric() {
 			tokens.push(scanner.number(terminal));
 			continue;
 		}
@@ -155,72 +144,65 @@ pub fn source(input: String) -> Result<Vec<Token>, Error> {
 			':' => tokens.push(Token::Colon),
 			'=' => tokens.push(Token::Equal),
 			
-		/* multi-terminal tokens */
-			'=' |  /*  ==     */
-			'!' |  /*  !=     */
-			'*' |  /*  *=     */
-			'-' |  /*  -=, -- */
-			'/' |  /*  /=     */
-			'&' |  /*  &&     */
-			'+'    /*  ++, += */
-			=> tokens.push(multi(&mut scanner, terminal)),
-
 			' ' | '\n' => (),
 
-			_   => return Err(Error::Terminal),
+			_   => tokens.push(multi(&mut scanner, terminal)?),
 		}
 	}
 
 	Ok(tokens)
 }
 
-fn multi(scanner: &mut Scanner, terminal: char) -> Token {
+fn multi(scanner: &mut Scanner, terminal: char) -> Result<Token, Error> {
 	match terminal {
 		'=' => {
 			if scanner.match_char('=') {
-				return Token::EqualEqual;
+				return Ok(Token::EqualEqual);
 			}
-			return Token::Equal;
+			return Ok(Token::Equal);
 		},
 		'!' => {
 			if scanner.match_char('=') {
-				return Token::BangEqual;
+				return Ok(Token::BangEqual);
 			}
-			return Token::Bang;
+			return Ok(Token::Bang);
 		},
 		'*' => {
 			if scanner.match_char('=') {
-				return Token::StarEqual;
+				return Ok(Token::StarEqual);
 			}
-			return Token::Star;
+			return Ok(Token::Star);
 		},
 		'-' => {
 			if scanner.match_char('=') {
-				return Token::MinusEqual;
+				return Ok(Token::MinusEqual);
 			}
-			return Token::Minus;
+			return Ok(Token::Minus);
 		},
 		'/' => {
 			if scanner.match_char('=') {
-				return Token::SlashEqual;
+				return Ok(Token::SlashEqual);
 			}
-			return Token::Slash;
+			return Ok(Token::Slash);
 		},
 		'&' => {
 			if scanner.match_char('&') {
-				return Token::And;
+				return Ok(Token::And);
 			}
 		},
 		'+' => {
 			if scanner.match_char('=') {
-				return Token::EqualEqual;
+				return Ok(Token::PlusEqual);
 			}
-			return Token::Equal;
+			return Ok(Token::Plus);
 		},
 		_   => (),
 	}
 	
-	return scanner.identifier(terminal);
+	if terminal.is_alphabetic() {
+		return Ok(scanner.identifier(terminal));
+	}
+	Err(Error::Terminal)
 }
 
 #[cfg(test)]
@@ -261,8 +243,71 @@ mod tests {
 				Token::Semicolon,
 				Token::End,
 			];
-
 			let file_toks = match do_file("minus") {
+				Ok(ts) => ts,
+				Err(e) => return assert_eq!(true, false),
+			};
+			assert_eq!(file_toks, correct_toks)
+		}
+
+		#[test]
+		fn test_plus() {
+			let correct_toks = vec![
+				Token::Number(TokenStr::from("78")),
+				Token::Plus,
+				Token::Number(TokenStr::from("12")),
+				Token::Semicolon,
+				Token::Number(TokenStr::from("23")),
+				Token::PlusEqual,
+				Token::Number(TokenStr::from("98")),
+				Token::Semicolon,
+				Token::End,
+			];
+			let file_toks = match do_file("plus") {
+				Ok(ts) => ts,
+				Err(e) => return assert_eq!(true, false),
+			};
+			assert_eq!(file_toks, correct_toks)
+		}
+
+		#[test]
+		fn test_star() {
+			let correct_toks = vec![
+				Token::Number(TokenStr::from("19")),
+				Token::Star,
+				Token::Number(TokenStr::from("73")),
+				Token::Semicolon,
+				Token::Number(TokenStr::from("38")),
+				Token::StarEqual,
+				Token::Number(TokenStr::from("27")),
+				Token::Semicolon,
+				Token::End,
+			];
+			let file_toks = match do_file("star") {
+				Ok(ts) => ts,
+				Err(e) => return assert_eq!(true, false),
+			};
+			assert_eq!(file_toks, correct_toks)
+		}
+
+		#[test]
+		fn test_slash() {
+			let correct_toks = vec![
+				Token::Number(TokenStr::from("81")),
+				Token::Slash,
+				Token::Number(TokenStr::from("398")),
+				Token::Semicolon,
+				Token::Identifier(TokenStr::from("thing")),
+				Token::Equal,
+				Token::Number(TokenStr::from("64")),
+				Token::Semicolon,
+				Token::Identifier(TokenStr::from("thing")),
+				Token::SlashEqual,
+				Token::Number(TokenStr::from("18")),
+				Token::Semicolon,
+				Token::End
+			];
+			let file_toks = match do_file("slash") {
 				Ok(ts) => ts,
 				Err(e) => return assert_eq!(true, false),
 			};
