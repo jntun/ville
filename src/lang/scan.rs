@@ -70,14 +70,6 @@ struct Scanner<'src> {
 }
 
 impl<'src> Scanner<'src> {
-	fn peek(&self, terminal: char) -> bool {
-		let mut copy = self.source.clone();
-		let Some((_, peek)) = copy.next() else {
-			return false;
-		};
-		return peek == terminal
-	}
-
 	fn match_char(&mut self, terminal: char) -> bool {
 		let Some((i, peek_term)) = self.source.next() else {
 			return false;
