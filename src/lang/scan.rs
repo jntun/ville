@@ -62,6 +62,17 @@ fn is_number(terminal: &char) -> bool {
 	}
 }
 
+fn is_identifier(terminal: &char) -> bool {
+	match terminal {
+		'a' .. 'z' |
+		'A' .. 'Z' |
+		'0' .. '9' |
+		'_' => return true,
+		_   => return false,
+		
+	}
+}
+
 struct Scanner<'src> {
 	source: Enumerate<Chars<'src>>,
 }
@@ -91,12 +102,20 @@ impl<'src> Scanner<'src> {
 			if !is_number(&terminal) {
 				break;
 			}
-
-	                  /* SAFETY: We peek()d this char already so we 
-	                   *   v     know that there is Some value here */
 			tok_str.push(self.source.next().unwrap().1);
 		}
 		Token::Number(tok_str)
+	}
+
+	fn identifier(&mut self, init: char) -> Token {
+		let mut tok_str = TokenStr::from(init);
+		while let Some((_, terminal)) = self.source.clone().peekable().peek() {
+			if !is_identifier(&terminal) {
+				break;
+			}
+			tok_str.push(self.source.next().unwrap().1);
+		}
+		Token::String(tok_str)
 	}
 }
 
