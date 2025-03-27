@@ -1,0 +1,123 @@
+//
+// Created by Justin Tunheim on 3/21/25
+//
+
+use crate::lang;
+
+pub enum Error {
+	File,
+	Terminal,
+	EndOfFile,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Token {
+	LeftParen,
+	RightParen,
+	LeftBrace,
+	RightBrace,
+	LeftBracket,
+	RightBracket,
+	Comma,
+	Dot,
+	Semicolon,
+	Slash,
+	Star,
+	Mod,
+
+	Plus,
+	PlusPlus,
+	Minus,
+	MinusMinus,
+	Bang,
+	BangEqual,
+	Equal,
+	EqualEqual,
+	Greater,
+	GreaterEqual,
+	Less,
+	LessEqual,
+
+	Identifier(String),
+	String(String),
+	Number(String),
+}
+
+fn is_number(terminal: &char) -> bool {
+	match terminal {
+		'0'..'9' | '.' => return true,
+		_              => return false,
+	}
+}
+
+struct Scanner<'src, 'tks> {
+	source: std::str::Chars<'src>,
+	tokens: &'tks mut Vec<Token>,
+}
+
+impl<'src, 'tks> Scanner<'src, 'tks> {
+}
+
+pub fn file(path: &String) -> Result<Vec<Token>, Error> {
+	let src = match std::fs::read_to_string(path) {
+		Ok(s)  => s,
+		Err(_) => return Err(Error::File), // TODO: match on error and return specificity
+	};
+	
+	source(src)
+}
+
+pub fn source(input: String) -> Result<Vec<Token>, Error> {
+	let mut tokens = Vec::new();
+	let mut scanner = Scanner { source: input.chars(), tokens: &mut tokens};
+
+	loop {
+		let Some(terminal) = scanner.source.next() else {
+			break;
+		};
+
+		if is_number(&terminal) {
+		}
+		match terminal  {
+			'*' => (),
+			'+' => (),
+
+			' ' | '\n' => (),
+
+			_   => return Err(Error::Terminal),
+		}
+	}
+
+	println!("{:?}", tokens);
+
+	Ok(tokens)
+}
+
+#[cfg(test)]
+mod tests {
+		use super::*;
+
+		fn do_file(filename: &str) -> Result<Vec<Token>, Error> {
+			let mut path = String::from("tests/");
+			path.push_str(filename);
+			path.push_str(".");
+			path.push_str(lang::Extension);
+
+			file(&path)
+		}
+
+		#[test]
+		fn test_add() {
+			let correct_toks = vec![
+				 Token::Number(String::from("13")),
+				 Token::Star,
+				 Token::Number(String::from("5")),
+				 Token::Semicolon,
+			];
+			let file_toks = match do_file("add") {
+				Ok(ts) => ts,
+				Err(e) => return assert_eq!(true, false),
+			};
+			assert_eq!(file_toks, correct_toks)
+		}
+}
