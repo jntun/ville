@@ -6,6 +6,7 @@ use std::iter::Enumerate;
 use std::str::Chars;
 use crate::lang;
 
+#[derive(Debug)]
 pub enum Error {
 	File,
 	Terminal,
