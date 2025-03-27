@@ -35,6 +35,7 @@ pub enum Token {
 	Mod,
 	Plus,
 	PlusPlus,
+	PlusEqual,
 	Minus,
 	MinusMinus,
 	MinusEqual,
