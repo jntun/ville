@@ -70,6 +70,16 @@ impl<'src> Scanner<'src> {
 		return peek == terminal
 	}
 
+	fn match_char(&mut self, terminal: char) -> bool {
+		let Some((_, peek_term)) = self.source.next() else {
+			return false;
+		};
+		if peek_term != terminal {
+			return false; 
+		}
+		true
+	}
+
 	fn number(&mut self, init: char) -> Token {
 		let mut tok_str = TokenStr::from(init);
 		while let Some((_, terminal)) = self.source.next() {
