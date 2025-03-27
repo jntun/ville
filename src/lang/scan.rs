@@ -238,10 +238,11 @@ mod tests {
 		#[test]
 		fn test_add() {
 			let correct_toks = vec![
-				 Token::Number(String::from("13")),
-				 Token::Star,
-				 Token::Number(String::from("5")),
-				 Token::Semicolon,
+				Token::Number(String::from("13")),
+				Token::Star,
+				Token::Number(String::from("5")),
+				Token::Semicolon,
+				Token::End,
 			];
 			let file_toks = match do_file("add") {
 				Ok(ts) => ts,
