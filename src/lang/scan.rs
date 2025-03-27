@@ -57,7 +57,7 @@ pub enum Token {
 }
 
 fn is_identifier(terminal: &char) -> bool {
-	if terminal.is_alphabetic() || terminal.is_numeric() {
+	if terminal.is_alphabetic() || terminal.is_digit(10) {
 		return true
 	}
 	false
